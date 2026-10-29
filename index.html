@@ -17,29 +17,24 @@
 .board.complete{border-color:#183f74}
 .number{color:#163d70}
 
-/* Matching blue controls and outlined white lettering */
+/* Matching blue controls and readable navy lettering */
 .modes{background:#c9e5fb}
-.modes button,.modes button[aria-pressed=true]{background:#c9e5fb;color:#fff;box-shadow:none}
+.modes button,.modes button[aria-pressed=true]{background:#c9e5fb;color:#183f74;box-shadow:none}
 .modes button[aria-pressed=true]{box-shadow:inset 0 0 0 2px #183f74}
-.action,.primary,.picture-label select{background:#c9e5fb;border-color:#183f74;color:#fff}
+.action,.primary,.picture-label select{background:#c9e5fb;border-color:#183f74;color:#183f74}
 .finish,.hint{background:#c9e5fb}
 .finish{border:1px solid #183f74}
 .progress{background:rgba(24,63,116,.2)}
 .progress span{background:#c9e5fb}
-.modes button,.action,.picture-label select,.finish strong,.finish small{
- color:#fff;
- paint-order:stroke fill;
- -webkit-text-stroke:.7px #111;
+body,.modes button,.modes button[aria-pressed=true],.action,.primary,
+.picture-label,.picture-label select,.panel-title,.count,.instruction,.status,
+.hint-title,.zero,.finish,.finish strong,.finish small,.number,.cell:not(.open){
+ color:#183f74;
+ -webkit-text-stroke:0;
  text-shadow:none;
 }
-.cell:not(.open){color:#183f74;-webkit-text-stroke:0;text-shadow:none}
 .picture-label select{font-weight:700}
 .picture-label select option{color:#183f74;background:#eff7ff;-webkit-text-stroke:0;text-shadow:none}
-@supports not (-webkit-text-stroke:1px #111){
- .modes button,.action,.picture-label select,.finish strong,.finish small{
-  text-shadow:-.5px -.5px 0 #111,.5px -.5px 0 #111,-.5px .5px 0 #111,.5px .5px 0 #111;
- }
-}
 </style>
 </head>
 <body>
