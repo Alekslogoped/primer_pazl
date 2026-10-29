@@ -37,10 +37,26 @@ body,.modes button,.modes button[aria-pressed=true],.action,.primary,
 .picture-label select option{color:#183f74;background:#eff7ff;-webkit-text-stroke:0;text-shadow:none}
 
 /* Larger game on a translucent ice-glass panel */
-.game-shell{width:100%;max-width:1120px;overflow:clip;border-radius:32px;box-shadow:0 16px 45px rgba(43,81,126,.18)}
-.app{width:100%;max-width:1120px;margin:0;padding:26px;border:1px solid rgba(255,255,255,.9);border-radius:32px;background:linear-gradient(135deg,rgba(255,255,255,.54),rgba(219,240,255,.24) 55%,rgba(244,251,255,.4));-webkit-backdrop-filter:blur(10px) saturate(115%);backdrop-filter:blur(10px) saturate(115%);box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(133,190,228,.6);transform-origin:top left}
+.game-shell{width:100%;max-width:1200px;overflow:clip;border-radius:32px;box-shadow:0 16px 45px rgba(43,81,126,.18)}
+.app{width:100%;max-width:1200px;margin:0;padding:26px;border:1px solid rgba(255,255,255,.9);border-radius:32px;background:linear-gradient(135deg,rgba(255,255,255,.54),rgba(219,240,255,.24) 55%,rgba(244,251,255,.4));-webkit-backdrop-filter:blur(10px) saturate(115%);backdrop-filter:blur(10px) saturate(115%);box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(133,190,228,.6);transform-origin:top left}
 .toolbar{gap:12px}
 @media(max-width:650px){.game-shell{border-radius:24px}.app{padding:17px 12px;border-radius:24px}.modes{gap:2px}.modes button{padding:10px 8px}}
+
+/* Snow magic appears only when the last piece is placed. */
+.snow-magic{position:fixed;inset:0;z-index:100;pointer-events:none;overflow:clip}
+.snow-particle{position:absolute;left:var(--left);top:var(--top);width:var(--size);height:var(--size);display:grid;place-items:center;line-height:1;color:#f8fdff;font-size:var(--size);text-shadow:0 0 7px #fff,0 0 15px #6bbcff;opacity:0;will-change:transform,opacity;animation:snow-burst var(--duration) var(--delay) cubic-bezier(.18,.65,.4,1) both}
+.snow-particle.dust{border-radius:50%;background:#fff;box-shadow:0 0 8px #a9e5ff}
+.board.celebrating{animation:ice-glow 2.8s ease-out}
+.board.celebrating::before{content:'';position:absolute;inset:-50%;z-index:2;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.65) 49%,transparent 63%);animation:ice-shimmer 1.4s ease-out both}
+@keyframes snow-burst{
+ 0%{opacity:0;transform:translate3d(0,0,0) scale(.15) rotate(0deg)}
+ 14%{opacity:1}
+ 40%{opacity:1;transform:translate3d(var(--spread-x),var(--spread-y),0) scale(1) rotate(var(--turn))}
+ 100%{opacity:0;transform:translate3d(var(--end-x),var(--end-y),0) scale(.6) rotate(var(--end-turn))}
+}
+@keyframes ice-glow{0%,100%{box-shadow:0 0 0 rgba(180,232,255,0)}25%{box-shadow:0 0 25px 8px #effcff,0 0 55px 12px #a2daff}65%{box-shadow:0 0 18px 3px #d5f4ff}}
+@keyframes ice-shimmer{from{transform:translateX(-70%)}to{transform:translateX(70%)}}
+@media(prefers-reduced-motion:reduce){.snow-magic{display:none}}
 </style>
 </head>
 <body>
@@ -61,6 +77,47 @@ body,.modes button,.modes button[aria-pressed=true],.action,.primary,
 (()=>{
 const $=id=>document.getElementById(id);
 const board=$('board'),tray=$('tray'),status=$('status');
+const snowLayer=document.createElement('div');
+snowLayer.className='snow-magic';
+snowLayer.setAttribute('aria-hidden','true');
+document.body.append(snowLayer);
+let snowTimer=0,snowFrame=0;
+function clearSnow(){
+ clearTimeout(snowTimer);cancelAnimationFrame(snowFrame);
+ snowLayer.replaceChildren();board.classList.remove('celebrating');
+}
+function celebrateSnow(){
+ clearSnow();
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ snowFrame=requestAnimationFrame(()=>{
+  if(done.size!==9)return;
+  const rect=board.getBoundingClientRect();
+  const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height*.5;
+  board.classList.add('celebrating');
+  const particles=document.createDocumentFragment();
+  for(let i=0;i<72;i++){
+   const particle=document.createElement('span');
+   const dust=i%3===0,angle=Math.random()*Math.PI*2;
+   const radius=rect.width*(.22+Math.random()*.4);
+   const spreadX=Math.cos(angle)*radius;
+   const spreadY=Math.sin(angle)*radius-rect.height*.16;
+   particle.className='snow-particle'+(dust?' dust':'');
+   particle.textContent=dust?'':(i%4===0?'✦':'❄');
+   const values={
+    left:centerX+'px',top:centerY+'px',size:(dust?3+Math.random()*5:14+Math.random()*19)+'px',
+    'spread-x':spreadX+'px','spread-y':spreadY+'px',
+    'end-x':(spreadX+(Math.random()-.5)*110)+'px',
+    'end-y':(spreadY+130+Math.random()*160)+'px',
+    turn:((Math.random()-.5)*200)+'deg','end-turn':((Math.random()-.5)*500)+'deg',
+    duration:(2600+Math.random()*1000)+'ms',delay:(Math.random()*180)+'ms'
+   };
+   for(const [name,value] of Object.entries(values))particle.style.setProperty('--'+name,value);
+   particles.append(particle);
+  }
+  snowLayer.append(particles);
+  snowTimer=setTimeout(clearSnow,4000);
+ });
+}
 let mode='mix',tasks=[],order=[],selected=null,active=null,done=new Set(),art='',sound=false,audio;
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function expression(answer,type){
@@ -88,10 +145,10 @@ function render(){
 function attempt(piece,cell){
  if(!Number.isInteger(piece)||!Number.isInteger(cell)||!tasks[piece]||!tasks[cell]||done.has(piece)||done.has(cell))return;
  active=cell;
- if(tasks[piece].answer===tasks[cell].answer){done.add(cell);selected=null;active=null;$('hint').hidden=true;render();tone(done.size===9);status.textContent=done.size===9?'Отлично! Ты собрал всю картинку!':'Верно! Ещё один фрагмент на месте.'}
+ if(tasks[piece].answer===tasks[cell].answer){done.add(cell);selected=null;active=null;$('hint').hidden=true;render();if(done.size===9)celebrateSnow();tone(done.size===9);status.textContent=done.size===9?'Отлично! Ты собрал всю картинку!':'Верно! Ещё один фрагмент на месте.'}
  else{selected=null;render();const el=board.children[cell];el.classList.add('wrong');setTimeout(()=>el.classList.remove('wrong'),350);status.textContent='Пока не подходит. Посчитай ещё раз — у тебя получится!'}
 }
-function start(){done=new Set();selected=null;active=null;tasks=shuffle(Array.from({length:11},(_,i)=>i)).slice(0,9).map(a=>expression(a,mode));order=shuffle(tasks.map((_,i)=>i));art=picture(Number($('scene').value));$('hint').hidden=true;status.textContent='Начнём? Выбери любой фрагмент.';render()}
+function start(){clearSnow();done=new Set();selected=null;active=null;tasks=shuffle(Array.from({length:11},(_,i)=>i)).slice(0,9).map(a=>expression(a,mode));order=shuffle(tasks.map((_,i)=>i));art=picture(Number($('scene').value));$('hint').hidden=true;status.textContent='Начнём? Выбери любой фрагмент.';render()}
 Array.from($('scene').options).forEach((o,i)=>o.value=String(i));
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));start()});
 $('scene').onchange=start;$('restart').onclick=start;$('next').onclick=()=>{$('scene').value=String((Number($('scene').value)+1)%5);start()};
@@ -119,10 +176,10 @@ function fitGame(){
   const style=getComputedStyle(document.body);
   const availableWidth=Math.max(320,document.documentElement.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight));
   const availableHeight=Math.max(300,window.innerHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom));
-  gameApp.style.width='1120px';gameApp.style.maxWidth='none';
+  gameApp.style.width='1200px';gameApp.style.maxWidth='none';
   const gameHeight=gameApp.offsetHeight;
-  const scale=Math.min(1,availableWidth/1120,availableHeight/gameHeight);
-  gameShell.style.width=(1120*scale)+'px';
+  const scale=Math.min(1,availableWidth/1200,availableHeight/gameHeight);
+  gameShell.style.width=(1200*scale)+'px';
   gameShell.style.height=(gameHeight*scale)+'px';
   gameShell.style.borderRadius=(32*scale)+'px';
   gameApp.style.transform='scale('+scale+')';
