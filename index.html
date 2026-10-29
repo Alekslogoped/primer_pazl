@@ -68,7 +68,7 @@ body,.modes button,.modes button[aria-pressed=true],.action,.primary,
 </div>
 <div class="play">
 <section><h2 class="panel-title">Поле с примерами <span class="count" id="counter">Собрано 0 из 9</span></h2><div id="board" class="board" aria-label="Поле с примерами"></div></section>
-<section><h2 class="panel-title">Фрагменты с ответами <span class="count">9 деталей</span></h2><div class="tray" id="tray" aria-label="Выбери ответ"></div><p class="instruction">Можно перетащить фрагмент на пример. На телефоне: нажми на фрагмент, затем на пример.</p><div class="bottom"><button class="action" id="help">💡 Подсказка</button><button class="action" id="restart">↻ Заново</button><button class="action sound" id="sound" aria-pressed="false" aria-label="Включить звук">♪ Звук выкл.</button></div><div class="hint" id="hint" hidden></div><p class="status" id="status" role="status" aria-live="polite">Начнём? Выбери любой фрагмент.</p></section>
+<section><h2 class="panel-title">Фрагменты с ответами <span class="count">9 деталей</span></h2><div class="tray" id="tray" aria-label="Выбери ответ"></div><p class="instruction">Можно перетащить фрагмент на пример. На телефоне: нажми на фрагмент, затем на пример.</p><div class="bottom"><button class="action" id="help">💡 Подсказка</button><button class="action" id="restart">↻ Заново</button><button class="action sound" id="sound" aria-pressed="false" aria-label="Включить звук">♪ Звук выкл.</button></div><div class="hint" id="hint" hidden></div><p class="status" id="status" role="status" aria-live="polite"></p></section>
 </div>
 <div class="finish" id="finish" hidden><div><strong>Ура! Картинка собрана! ✨</strong><small>Все девять примеров решены.</small></div><button class="action primary" id="next">Следующая картинка →</button></div>
 </main>
@@ -148,7 +148,7 @@ function attempt(piece,cell){
  if(tasks[piece].answer===tasks[cell].answer){done.add(cell);selected=null;active=null;$('hint').hidden=true;render();if(done.size===9)celebrateSnow();tone(done.size===9);status.textContent=done.size===9?'Отлично! Ты собрал всю картинку!':'Верно! Ещё один фрагмент на месте.'}
  else{selected=null;render();const el=board.children[cell];el.classList.add('wrong');setTimeout(()=>el.classList.remove('wrong'),350);status.textContent='Пока не подходит. Посчитай ещё раз — у тебя получится!'}
 }
-function start(){clearSnow();done=new Set();selected=null;active=null;tasks=shuffle(Array.from({length:11},(_,i)=>i)).slice(0,9).map(a=>expression(a,mode));order=shuffle(tasks.map((_,i)=>i));art=picture(Number($('scene').value));$('hint').hidden=true;status.textContent='Начнём? Выбери любой фрагмент.';render()}
+function start(){clearSnow();done=new Set();selected=null;active=null;tasks=shuffle(Array.from({length:11},(_,i)=>i)).slice(0,9).map(a=>expression(a,mode));order=shuffle(tasks.map((_,i)=>i));art=picture(Number($('scene').value));$('hint').hidden=true;status.textContent='';render()}
 Array.from($('scene').options).forEach((o,i)=>o.value=String(i));
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));start()});
 $('scene').onchange=start;$('restart').onclick=start;$('next').onclick=()=>{$('scene').value=String((Number($('scene').value)+1)%5);start()};
